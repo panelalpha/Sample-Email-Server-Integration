@@ -1,134 +1,179 @@
 <?php
 
-namespace App\Lib\Integrations\EmailServers\Cpanel;
+namespace App\Lib\Integrations\EmailServers\SampleEmailServer;
 
-use App\Lib\Integrations\EmailServers\AbstractEmailServer\AbstractDomain;
-use App\Lib\Integrations\EmailServers\Cpanel\Domain\Account;
-use App\Lib\Integrations\EmailServers\Cpanel\Domain\Forwarder;
+
 use App\Lib\Integrations\EmailServers\SampleEmailServer;
+use App\Lib\Integrations\EmailServers\AbstractEmailServer\AbstractDomain;
+use App\Lib\Integrations\EmailServers\SampleEmailServer\Domain\Account;
+use App\Lib\Integrations\EmailServers\SampleEmailServer\Domain\Forwarder;
 use App\Lib\Interfaces\Integrations\EmailServer\DomainInterface;
 use App\Models\EmailDomain;
+use App\Models\EmailServer;
 use Exception;
 
+/**
+ * Class Domain
+ *
+ * Provides functionality for managing domains on an email server.
+ * This includes retrieving, creating, and deleting domains, as well as managing
+ * email accounts and forwarders associated with a specific domain.
+ *
+ * This class implements DomainInterface and extends AbstractDomain to align with the
+ * generic domain structure used across different email servers.
+ */
 class Domain extends AbstractDomain implements DomainInterface
 {
     /**
      * Constructor for the Domain class.
      *
-     * @param App\Lib\Integrations\EmailServers\EmailServer $emailServer Instance of Cpanel class for API communication
-     * @param App\Models\EmailDomain $emailDomain Email domain model
+     * The EmailDomain model has the following attributes:
+     * - id (int)               : The unique identifier of the model
+     * - user_id (int)          : The unique identifier of the associated user
+     * - service_id (int)       : The unique identifier of the associated service
+     * - server_account_id (int): The unique identifier of the server account
+     * - domain (string)        : The domain name
+     * - details (array)        : Additional details about the domain
+     *
+     * @param SampleEmailServer $sampleEmailServer Instance of the email server being used
+     * @param EmailDomain $emailDomain The email domain model instance
      */
-    public function __construct(public SampleEmailServer $emailServer, public EmailDomain $emailDomain)
+    public function __construct(private SampleEmailServer $emailServer, private EmailDomain $emailDomain)
     {
     }
 
     /**
      * Returns an instance of the Account class for managing email accounts.
      *
-     * @return App\Lib\Integrations\EmailServers\EmailServer\Domain\Account
+     * @return Account Instance of the Account management class
      */
-    public function account(): App\Lib\Integrations\EmailServers\EmailServer\Domain\Account
+    public function account(): Account
     {
-        return new App\Lib\Integrations\EmailServers\EmailServer\Domain\Account($this->emailServer, $this->emailDomain);
+        return new Account($this->emailServer, $this->emailDomain);
     }
 
     /**
      * Returns an instance of the Forwarder class for managing email forwarders.
      *
-     * @return App\Lib\Integrations\EmailServers\EmailServer\Domain\Forwarder
- */
-    public function forwarder(): App\Lib\Integrations\EmailServers\EmailServer\Domain\Forwarder
+     * @return Forwarder Instance of the Forwarder management class
+     */
+    public function forwarder(): Forwarder
     {
-        return new App\Lib\Integrations\EmailServers\EmailServer\Domain\Forwarder($this->emailServer, $this->emailDomain);
+        return new Forwarder($this->emailServer, $this->emailDomain);
     }
 
     /**
      * Retrieves a list of all email accounts for the given domain.
      *
-     * @return array List of email accounts with disk usage and quota information
-     * @throws Exception In case of API communication error
+     * The response contains the disk usage and quota for each account.
+     * - disk_usage (int): Disk usage in MB
+     * - disk_quota (int|null): Disk quota, or null if no limit is set
+     *
+     * @return array[] List of email accounts, where each account includes:
+     *                 - 'email' (string) The email address
+     *                 - 'disk_usage' (int) Disk usage in MB
+     *                 - 'disk_quota' (int|null) Disk quota, or null if no limit
      */
     public function listAccounts(): array
     {
-        // Call API to get the list of email accounts assigned to email domain
-        // Process the received data and return it in the appropriate format
+        $accounts = [];
 
-        // Sample return data:
-        return [
-            [
-                'email' => 'john@example.com',
-                'disk_usage' => 50, // in MB
-                'disk_quota' => null // unlimited
-            ],
-            [
-                'email' => 'jane@example.com',
-                'disk_usage' => 75, // in MB
-                'disk_quota' => 2000 // in MB
-            ]
-        ];
+        // Example API call to get list of email accounts for the domain
+        $data = $this->emailServer->apiCall('GET', '/email/accounts', [
+            'domain' => $this->emailDomain->domain,
+        ]);
+
+        // Process each account from the API response
+        foreach ($data['accounts'] as $account) {
+            $accounts[] = [
+                'email' => $account['email'],
+                'disk_usage' => $account['disk_usage'],
+                'disk_quota' => $account['disk_quota'] ?? null,
+            ];
+        }
+
+        return $accounts;
     }
 
     /**
      * Retrieves a list of all email forwarders for the given domain.
      *
-     * @return array List of email forwarders
-     * @throws Exception In case of API communication error
+     * @return array[] List of email forwarders, where each forwarder includes:
+     *                 - 'email' (string) The email address being forwarded
+     *                 - 'forward_to' (string) The email address to which it is forwarded
      */
     public function listForwarders(): array
     {
-        // Call API to get the list of forwarders assigned to email Domain
-        // Process the received data and return it in the appropriate format
+        $forwarders = [];
 
-        // Sample return data:
-        return [
-            [
-                'email' => 'sales@example.com',
-                'forward_to' => 'john@example.com'
-            ],
-            [
-                'email' => 'support@example.com',
-                'forward_to' => 'jane@example.com'
-            ]
-        ];
+        // Example API call to get list of email forwarders for the domain
+        $data = $this->emailServer->apiCall('GET', '/email/forwarders', [
+            'domain' => $this->emailDomain->domain,
+        ]);
+
+        // Process each forwarder from the API response
+        foreach ($data['forwarders'] as $forwarder) {
+            $forwarders[] = [
+                'email' => $forwarder['email'],
+                'forward_to' => $forwarder['forward_to'],
+            ];
+        }
+
+        return $forwarders;
     }
 
     /**
-     * Checks if the domain exists in the cPanel system.
+     * Checks if the domain exists on the email server.
      *
      * @return bool True if the domain exists, false otherwise
-     * @throws Exception In case of API communication error
      */
     public function exists(): bool
     {
-        // Call API to check domain existence
-        // Interpret the response and return the appropriate boolean value
+        try {
+            // Example API call to check if the domain exists
+            $response = $this->emailServer->apiCall('GET', '/email/domain-exists', [
+                'domain' => $this->emailDomain->domain,
+            ]);
 
-
-        // Sample implementation:
-        $domainExists = true; // This would be the result of the API call
-        return $domainExists;
+            return isset($response['exists']) ? $response['exists'] : false;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     /**
-     * Creates a new domain in the cPanel system.
+     * Creates a new domain on the email server.
      *
-     * @throws Exception In case of an error during domain creation
+     * Updates the EmailDomain model with the new details after successful creation.
+     *
+     * @throws Exception If the domain creation fails
      */
     public function create(): void
     {
-        // Call cPanel API to create a new account
-        // Update the EmailDomain model with new data
+        // Example API call to create a new domain
+        $data = $this->emailServer->apiCall('POST', '/email/create-domain', [
+            'domain' => $this->emailDomain->domain,
+        ]);
 
+
+        // Update EmailDomain model with new details and save
+        $this->emailDomain->setDetails([
+            'detail' => $data['detail'],
+        ]);
+        $this->emailDomain->save();
 
     }
 
     /**
-     * Deletes the domain from the cPanel system.
+     * Deletes the domain from the email server.
      *
-     * @throws Exception In case of an error during domain deletion
+     * @throws Exception If the domain deletion fails
      */
     public function delete(): void
     {
-        // Call cPanel API to delete the domain account
+        // Example API call to delete the domain
+        $this->emailServer->apiCall('DELETE', '/email/delete-domain', [
+            'domain' => $this->emailDomain->domain,
+        ]);
     }
 }
