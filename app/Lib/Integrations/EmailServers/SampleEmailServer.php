@@ -18,8 +18,8 @@ use Exception;
  *
  * This class extends AbstractEmailServer and implements ExternalEmailServerInterface.
  */
-class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServerInterface {
-
+class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServerInterface
+{
     /**
      * The name of the email server.
      *
@@ -48,6 +48,8 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * - 'name' (string) - the field identifier
      * - 'type' (string) - the field type, e.g., text or checkbox
      *
+     * Example email server requires: api_url, api_key, ssl_verification
+     *
      * @var array
      */
     public static array $configFields = [
@@ -71,6 +73,11 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * Each field consists of:
      * - 'name' (string) - the field identifier
      * - 'type' (string) - the field type, e.g., text or checkbox
+     *
+     * If field needs data from email server,
+     * it can be retrieved in getAvailableServerValues() method.
+     *
+     * Example email server requires to create email domain 'example_config'
      *
      * @var array
      */
@@ -101,7 +108,8 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * @param EmailServer $emailServer The email server model instance.
      */
-    public function __construct(EmailServer $emailServer) {
+    public function __construct(EmailServer $emailServer)
+    {
         $this->model = $emailServer;
     }
 
@@ -111,7 +119,8 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * @param EmailDomain $emailDomain The email domain model instance.
      * @return Domain Instance of the Domain class associated with the email domain.
      */
-    public function domain(EmailDomain $emailDomain): Domain {
+    public function domain(EmailDomain $emailDomain): Domain
+    {
         return new Domain($this, $emailDomain);
     }
 
@@ -127,7 +136,8 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * @return void
      * @throws Exception If the connection test fails.
      */
-    public static function testConnection(array $config): void {
+    public static function testConnection(array $config): void
+    {
         // Example API call to test the connection to the email server.
         // Replace with actual API call logic.
     }
@@ -141,7 +151,8 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * @return array[] List of email domains.
      */
-    public function listDomains(): array {
+    public function listDomains(): array
+    {
         $domains = [];
 
         // Example API call to retrieve a list of email domains.
@@ -169,7 +180,8 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *     details: array,
      * } The domain details, or null if not found.
      */
-    public function findDomain(string $domain): ?array {
+    public function findDomain(string $domain): ?array
+    {
         // Example API call to retrieve a single domain by its name.
         $data = $this->apiCall('GET', "/email/domains/{$domain}");
 
@@ -198,9 +210,21 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * @return array The usage details for email accounts and forwarders.
      */
-    public function usage(): array {
+    public function usage(): array
+    {
+        /**
+         * To get list of email domain under service you can use
+         * $this->service->emailDomains->pluck('domain');
+         * which will create an array of domain names, e.g.
+         *   $domains = [
+         *     'example.com,
+         *     'example.org,
+         *   ]
+         */
+        $domains = $this->service->emailDomains->pluck('domain');
+
         // Example API call to get usage statistics for email accounts and forwarders.
-        $data = $this->model->apiCall('GET', '/email/usage');
+        $data = $this->apiCall('GET', '/email/usage', $domains);
 
         return [
             'email_accounts' => [
@@ -227,9 +251,10 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * @return array List of available configuration values for the email server.
      */
-    public function getAvailableServerValues(): array {
+    public function getAvailableServerValues(): array
+    {
         // Example API call to retrieve available configuration values for the server.
-        $data = $this->model->apiCall('GET', '/email/config-values');
+        $data = $this->apiCall('GET', '/email/config-values');
 
         $exampleConfig = [];
         foreach ($data['example_config'] as $item) {

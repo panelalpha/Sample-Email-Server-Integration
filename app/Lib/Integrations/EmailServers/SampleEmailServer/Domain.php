@@ -19,8 +19,7 @@ use Exception;
  * This includes retrieving, creating, and deleting domains, as well as managing
  * email accounts and forwarders associated with a specific domain.
  *
- * This class implements DomainInterface and extends AbstractDomain to align with the
- * generic domain structure used across different email servers.
+ * This class implements DomainInterface and extends AbstractDomain
  */
 class Domain extends AbstractDomain implements DomainInterface
 {
