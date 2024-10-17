@@ -27,11 +27,6 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public static string $slug = "sample-email-server";
 
     /**
-     * The path to the logo of the email server.
-     */
-    public static ?string $logo = "/app/Lib/Integrations/EmailServers/SampleEmailServer/logo.svg";
-
-    /**
      * The URL to the email server's official website.
      *
      * This link provides direct access to additional information,
@@ -48,23 +43,26 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * Each configuration field consists of:
      * - 'name' (string) - the field identifier
      * - 'type' (string) - the field type, e.g., text or checkbox
-     * 
+     *
      * Form with these fields will be rendered in admin area when adding/editing email server.
-     * 
+     *
      * If the email server is configured in admin area, values of these fields can be accessed
      * by using `$this->model->connection_config` from within this class
      */
     public static array $configFields = [
         'api_url' => [
             'name' => 'api_url',
+            'label' => 'API URL',
             'type' => 'text',
         ],
         'api_key' => [
             'name' => 'api_key',
+            'label' => 'API Key',
             'type' => 'text',
         ],
         'ssl_verification' => [
             'name' => 'ssl_verification',
+            'label' => 'SSL Verification',
             'type' => 'checkbox',
         ],
     ];
@@ -77,7 +75,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * - 'type' (string) - the field type, e.g., text or checkbox
      *
      * Form with these fields will be rendered in admin area when adding/editing plan.
-     * 
+     *
      * If the plan is configured in admin area, values of these fields can be accessed
      * by using `$this->service->plan->email_account_config` from within this class.
      * Note: `$this->service` is nullable and should be accessed
@@ -86,6 +84,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public static array $accountConfigFields = [
         'example_config' => [
             'name' => 'example_config',
+            'label' => 'Example config',
             'type' => 'text',
             'default' => 'Default',
         ],
@@ -94,7 +93,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     /**
      * Tests the connection to the email server API using the provided configuration.
      * This method doesn't expect return on success and should throw exception on failure.
-     * 
+     *
      * @param array $config The API connection configuration based on $configFields.
      * @return void
      * @throws Exception If the connection test fails.
@@ -103,7 +102,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     {
         // Example API call to test the connection to the email server.
 
-        $result = $this->sampleAPI()->testConnection([
+        $result = self::sampleAPI()->testConnection([
             'api_url' => $config['api_url'],
             'api_key' => $config['api_key'],
             'ssl_verification' => $config['ssl_verification'],
@@ -127,10 +126,9 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         $domains = [];
 
         // Example API call to retrieve a list of email domains.
-        $data = $this->apiCall('GET', '/email/domains');
+        $result = self::sampleAPI()->listDomains();
 
-        // Process and format the domains.
-        foreach ($data['domains'] as $domain) {
+        foreach ($result['domains'] as $domain) {
             $domains[] = [
                 'domain' => $domain['name'],
                 'details' => [
@@ -154,16 +152,16 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public function findDomain(string $domain): ?array
     {
         // Example API call to retrieve a single domain by its name.
-        $data = $this->apiCall('GET', "/email/domains/{$domain}");
+        $result = self::sampleAPI()->findDomain($domain);
 
-        if (!$data || !isset($data['domain'])) {
+        if (!$result) {
             return null;
         }
 
         return [
-            'domain' => $data['domain']['name'],
+            'domain' => $result['domain']['name'],
             'details' => [
-                'remote_id' => $data['domain']['id'],
+                'remote_id' => $result['domain']['id'],
             ],
         ];
     }
@@ -195,16 +193,16 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         $domains = $this->service->emailDomains->pluck('domain');
 
         // Example API call to get usage statistics for email accounts and forwarders.
-        $data = $this->apiCall('GET', '/email/usage', $domains);
+        $result = self::sampleAPI()->getUsage($domains);
 
         return [
             'email_accounts' => [
-                'usage' => $data['email_accounts']['usage'],
-                'maximum' => $data['email_accounts']['maximum'] ?? null,
+                'usage' => $result['email_accounts']['usage'],
+                'maximum' => $result['email_accounts']['maximum'] ?? null,
             ],
             'forwarders' => [
-                'usage' => $data['forwarders']['usage'],
-                'maximum' => $data['forwarders']['maximum'] ?? null,
+                'usage' => $result['forwarders']['usage'],
+                'maximum' => $result['forwarders']['maximum'] ?? null,
             ],
         ];
     }
@@ -225,10 +223,10 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public function getAvailableServerValues(): array
     {
         // Example API call to retrieve available configuration values for the server.
-        $data = $this->apiCall('GET', '/email/config-values');
+        $result = self::sampleAPI()->getConfig();
 
         $exampleConfig = [];
-        foreach ($data['example_config'] as $item) {
+        foreach ($result['example_config'] as $item) {
             $exampleConfig[] = [
                 'text' => $item['name'],
                 'value' => $item['id'],
@@ -243,7 +241,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     /**
      * For demonstration purposes only
      */
-    public function sampleAPI(): object
+    public static function sampleAPI(): object
     {
         return (new class {
             public function __call(string $name, array $arguments)
