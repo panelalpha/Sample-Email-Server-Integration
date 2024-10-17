@@ -2,65 +2,28 @@
 
 namespace App\Lib\Integrations\EmailServers\SampleEmailServer;
 
-
 use App\Lib\Integrations\EmailServers\SampleEmailServer;
 use App\Lib\Integrations\EmailServers\AbstractEmailServer\AbstractDomain;
-use App\Lib\Integrations\EmailServers\SampleEmailServer\Domain\Account;
-use App\Lib\Integrations\EmailServers\SampleEmailServer\Domain\Forwarder;
 use App\Lib\Interfaces\Integrations\EmailServer\DomainInterface;
 use App\Models\EmailDomain;
-use App\Models\EmailServer;
 use Exception;
 
 /**
  * Class Domain
  *
  * Provides functionality for managing domains on an email server.
- * This includes retrieving, creating, and deleting domains, as well as managing
- * email accounts and forwarders associated with a specific domain.
  *
- * This class implements DomainInterface and extends AbstractDomain
+ * @property EmailDomain{
+ *     id: int,
+ *     user_id: int,
+ *     service_id: int,
+ *     server_account_id: int,
+ *     domain: string,
+ *     details: array
+ * } $emailDomain
  */
 class Domain extends AbstractDomain implements DomainInterface
 {
-    /**
-     * Constructor for the Domain class.
-     *
-     * The EmailDomain model has the following attributes:
-     * - id (int)               : The unique identifier of the model
-     * - user_id (int)          : The unique identifier of the associated user
-     * - service_id (int)       : The unique identifier of the associated service
-     * - server_account_id (int): The unique identifier of the server account
-     * - domain (string)        : The domain name
-     * - details (array)        : Additional details about the domain
-     *
-     * @param SampleEmailServer $sampleEmailServer Instance of the email server being used
-     * @param EmailDomain $emailDomain The email domain model instance
-     */
-    public function __construct(private SampleEmailServer $emailServer, private EmailDomain $emailDomain)
-    {
-    }
-
-    /**
-     * Returns an instance of the Account class for managing email accounts.
-     *
-     * @return Account Instance of the Account management class
-     */
-    public function account(): Account
-    {
-        return new Account($this->emailServer, $this->emailDomain);
-    }
-
-    /**
-     * Returns an instance of the Forwarder class for managing email forwarders.
-     *
-     * @return Forwarder Instance of the Forwarder management class
-     */
-    public function forwarder(): Forwarder
-    {
-        return new Forwarder($this->emailServer, $this->emailDomain);
-    }
-
     /**
      * Retrieves a list of all email accounts for the given domain.
      *
@@ -78,12 +41,9 @@ class Domain extends AbstractDomain implements DomainInterface
         $accounts = [];
 
         // Example API call to get list of email accounts for the domain
-        $data = $this->emailServer->apiCall('GET', '/email/accounts', [
-            'domain' => $this->emailDomain->domain,
-        ]);
+        $result = SampleEmailServer::sampleAPI()->listAccounts($this->emailDomain->domain);
 
-        // Process each account from the API response
-        foreach ($data['accounts'] as $account) {
+        foreach ($result['accounts'] as $account) {
             $accounts[] = [
                 'email' => $account['email'],
                 'disk_usage' => $account['disk_usage'],
@@ -106,12 +66,9 @@ class Domain extends AbstractDomain implements DomainInterface
         $forwarders = [];
 
         // Example API call to get list of email forwarders for the domain
-        $data = $this->emailServer->apiCall('GET', '/email/forwarders', [
-            'domain' => $this->emailDomain->domain,
-        ]);
+        $result = SampleEmailServer::sampleAPI()->listForwarders($this->emailDomain->domain);
 
-        // Process each forwarder from the API response
-        foreach ($data['forwarders'] as $forwarder) {
+        foreach ($result['forwarders'] as $forwarder) {
             $forwarders[] = [
                 'email' => $forwarder['email'],
                 'forward_to' => $forwarder['forward_to'],
@@ -128,16 +85,9 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function exists(): bool
     {
-        try {
-            // Example API call to check if the domain exists
-            $response = $this->emailServer->apiCall('GET', '/email/domain-exists', [
-                'domain' => $this->emailDomain->domain,
-            ]);
-
-            return isset($response['exists']) ? $response['exists'] : false;
-        } catch (Exception $e) {
-            return false;
-        }
+        // Example API call to check if the domain exists
+        $result = SampleEmailServer::sampleAPI()->emailDomainExists($this->emailDomain->domain);
+        return $result['exists'];
     }
 
     /**
@@ -150,14 +100,11 @@ class Domain extends AbstractDomain implements DomainInterface
     public function create(): void
     {
         // Example API call to create a new domain
-        $data = $this->emailServer->apiCall('POST', '/email/create-domain', [
-            'domain' => $this->emailDomain->domain,
-        ]);
-
+        $result = SampleEmailServer::sampleAPI()->createEmailDomain($this->emailDomain->domain);
 
         // Update EmailDomain model with new details and save
         $this->emailDomain->setDetails([
-            'detail' => $data['detail'],
+            'detail' => $result['details']['detail'],
         ]);
         $this->emailDomain->save();
 
@@ -171,8 +118,6 @@ class Domain extends AbstractDomain implements DomainInterface
     public function delete(): void
     {
         // Example API call to delete the domain
-        $this->emailServer->apiCall('DELETE', '/email/delete-domain', [
-            'domain' => $this->emailDomain->domain,
-        ]);
+        SampleEmailServer::sampleAPI()->deleteEmailDomain($this->emailDomain->domain);
     }
 }
