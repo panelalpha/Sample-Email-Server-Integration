@@ -35,6 +35,25 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public static string $slug = "sample-email-server";
 
     /**
+     * The path to the logo of the email server.
+     *
+     * @var string|null
+     */
+    public static ?string $logo = "/app/Lib/Integrations/EmailServers/SampleEmailServer/logo.svg";
+
+    /**
+     * The URL to the email server's official website.
+     *
+     * This link provides direct access to additional information,
+     * support, or configuration settings provided by the email server.
+     *
+     * Optional.
+     *
+     * @var string|null
+     */
+    public static ?string $link = "https://example.com";
+
+    /**
      * Indicates whether this email server integration is enabled or not.
      *
      * @var bool|null
