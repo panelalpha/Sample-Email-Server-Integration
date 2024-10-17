@@ -3,10 +3,7 @@
 namespace App\Lib\Integrations\EmailServers;
 
 use App\Lib\Integrations\EmailServers\AbstractEmailServer;
-use App\Lib\Integrations\EmailServers\SampleEmailServer\Domain;
 use App\Lib\Interfaces\Integrations\ExternalEmailServerInterface;
-use App\Models\EmailDomain;
-use App\Models\EmailServer;
 use Exception;
 
 /**
@@ -16,28 +13,21 @@ use Exception;
  * The class contains methods to manage email domains, test connection to the
  * email server API, and retrieve usage statistics.
  *
- * This class extends AbstractEmailServer and implements ExternalEmailServerInterface.
  */
 class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServerInterface
 {
     /**
      * The name of the email server.
-     *
-     * @var string
      */
     public static string $name = "Sample Email Server";
 
     /**
      * The unique slug used to identify this email server in the system.
-     *
-     * @var string
      */
     public static string $slug = "sample-email-server";
 
     /**
      * The path to the logo of the email server.
-     *
-     * @var string|null
      */
     public static ?string $logo = "/app/Lib/Integrations/EmailServers/SampleEmailServer/logo.svg";
 
@@ -48,17 +38,9 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * support, or configuration settings provided by the email server.
      *
      * Optional.
-     *
-     * @var string|null
      */
     public static ?string $link = "https://example.com";
 
-    /**
-     * Indicates whether this email server integration is enabled or not.
-     *
-     * @var bool|null
-     */
-    public static ?bool $enabled = true;
 
     /**
      * Configuration fields needed to connect to the email server API.
@@ -66,10 +48,11 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * Each configuration field consists of:
      * - 'name' (string) - the field identifier
      * - 'type' (string) - the field type, e.g., text or checkbox
-     *
-     * Example email server requires: api_url, api_key, ssl_verification
-     *
-     * @var array
+     * 
+     * Form with these fields will be rendered in admin area when adding/editing email server.
+     * 
+     * If the email server is configured in admin area, values of these fields can be accessed
+     * by using `$this->model->connection_config` from within this class
      */
     public static array $configFields = [
         'api_url' => [
@@ -93,12 +76,12 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * - 'name' (string) - the field identifier
      * - 'type' (string) - the field type, e.g., text or checkbox
      *
-     * If field needs data from email server,
-     * it can be retrieved in getAvailableServerValues() method.
-     *
-     * Example email server requires to create email domain 'example_config'
-     *
-     * @var array
+     * Form with these fields will be rendered in admin area when adding/editing plan.
+     * 
+     * If the plan is configured in admin area, values of these fields can be accessed
+     * by using `$this->service->plan->email_account_config` from within this class.
+     * Note: `$this->service` is nullable and should be accessed
+     * only from `usage` method in this class.
      */
     public static array $accountConfigFields = [
         'example_config' => [
@@ -109,48 +92,9 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     ];
 
     /**
-     * The model instance for the email server.
-     *
-     * EmailServer object contains:
-     * - id (int) - the model identifier
-     * - name (string) - the name of the email server
-     * - type (string) - the type of email server
-     * - connection_config (array) - API connection details based on $configFields
-     * - details (array) - additional details such as IP address
-     *
-     * @var EmailServer
-     */
-    public EmailServer $model;
-
-    /**
-     * Constructor to initialize the email server instance.
-     *
-     * @param EmailServer $emailServer The email server model instance.
-     */
-    public function __construct(EmailServer $emailServer)
-    {
-        $this->model = $emailServer;
-    }
-
-    /**
-     * Returns a Domain object for managing a specific email domain.
-     *
-     * @param EmailDomain $emailDomain The email domain model instance.
-     * @return Domain Instance of the Domain class associated with the email domain.
-     */
-    public function domain(EmailDomain $emailDomain): Domain
-    {
-        return new Domain($this, $emailDomain);
-    }
-
-    /**
      * Tests the connection to the email server API using the provided configuration.
-     *
-     * Example $config array:
-     * - api_url (string)
-     * - api_key (string)
-     * - ssl_verification (bool)
-     *
+     * This method doesn't expect return on success and should throw exception on failure.
+     * 
      * @param array $config The API connection configuration based on $configFields.
      * @return void
      * @throws Exception If the connection test fails.
@@ -158,7 +102,15 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public static function testConnection(array $config): void
     {
         // Example API call to test the connection to the email server.
-        // Replace with actual API call logic.
+
+        $result = $this->sampleAPI()->testConnection([
+            'api_url' => $config['api_url'],
+            'api_key' => $config['api_key'],
+            'ssl_verification' => $config['ssl_verification'],
+        ]);
+        if (!$result) {
+            throw new \Exception('Test connection failed');
+        }
     }
 
     /**
@@ -286,5 +238,18 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         return [
             'example_config' => $exampleConfig,
         ];
+    }
+
+    /**
+     * For demonstration purposes only
+     */
+    public function sampleAPI(): object
+    {
+        return (new class {
+            public function __call(string $name, array $arguments)
+            {
+                return true;
+            }
+        });
     }
 }

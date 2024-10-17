@@ -13,7 +13,9 @@ use Exception;
  * This class handles the creation and deletion of email forwarders associated with
  * a domain on an email server.
  *
- * This class implements ForwarderInterface.
+ * Server configuration array can be accessed by using
+ * `$this->emailServer->model->connection_config` from within this class
+ * 
  */
 class Forwarder implements ForwarderInterface
 {
@@ -33,6 +35,7 @@ class Forwarder implements ForwarderInterface
      */
     public function __construct(private SampleEmailServer $emailServer, private EmailDomain $emailDomain)
     {
+        
     }
 
     /**
