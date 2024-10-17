@@ -2,9 +2,9 @@
 
 namespace App\Lib\Integrations\EmailServers\SampleEmailServer\Domain;
 
+use App\Lib\Integrations\EmailServers\AbstractEmailServer\Domain\AbstractForwarder;
 use App\Lib\Integrations\EmailServers\SampleEmailServer;
 use App\Lib\Interfaces\Integrations\EmailServer\Domain\ForwarderInterface;
-use App\Models\EmailDomain;
 use Exception;
 
 /**
@@ -15,29 +15,10 @@ use Exception;
  *
  * Server configuration array can be accessed by using
  * `$this->emailServer->model->connection_config` from within this class
- * 
+ *
  */
-class Forwarder implements ForwarderInterface
+class Forwarder extends AbstractForwarder implements ForwarderInterface
 {
-    /**
-     * Constructor for the Forwarder class.
-     *
-     * The EmailDomain model includes the following attributes:
-     * - id (int)               : Unique identifier of the model
-     * - user_id (int)          : ID of the associated user
-     * - service_id (int)       : ID of the associated service
-     * - server_account_id (int): ID of the associated server account
-     * - domain (string)        : Domain name
-     * - details (array)        : Additional details about the domain
-     *
-     * @param SampleEmailServer $emailServer Instance of the email server being used
-     * @param EmailDomain $emailDomain Instance of the EmailDomain model
-     */
-    public function __construct(private SampleEmailServer $emailServer, private EmailDomain $emailDomain)
-    {
-        
-    }
-
     /**
      * Creates a new email forwarder for the given domain.
      *
@@ -53,7 +34,7 @@ class Forwarder implements ForwarderInterface
     public function create(array $params): void
     {
         // Example API call to create a new forwarder
-        $this->emailServer->apiCall('POST', '/email/domain/' . $this->emailDomain->domain . '/forwarders', $params);
+        SampleEmailServer::sampleAPI()->createForwarder($this->emailDomain->domain, $params);
     }
 
     /**
@@ -71,9 +52,6 @@ class Forwarder implements ForwarderInterface
     public function delete(string $email, string $forward_to): void
     {
         // Example API call to delete an existing forwarder
-        $this->emailServer->apiCall('DELETE', '/email/domain/' . $this->emailDomain->domain . '/forwarders', [
-            'email' => $email,
-            'forward_to' => $forward_to,
-        ]);
+        SampleEmailServer::sampleAPI()->createForwarder($this->emailDomain->domain, $email, $forward_to);
     }
 }
