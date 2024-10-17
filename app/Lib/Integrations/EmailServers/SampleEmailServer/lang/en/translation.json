@@ -1,0 +1,20 @@
+{
+  "title": "Sample Email Server",
+  "description": "Sample Email Server - Description about Email Server Integration",
+  "config_fields": {
+    "api_url": {
+      "label": "API Url"
+    },
+    "api_key": {
+      "label": "API Key"
+    },
+    "ssl_verification": {
+      "label": "SSL Verification"
+    }
+  },
+  "account_config_fields": {
+    "example_config": {
+      "label": "Example Config"
+    }
+  }
+}
