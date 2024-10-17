@@ -39,16 +39,27 @@ Ensure all features listed are implemented within the integration to provide com
 
 To create and install your own email server integration, follow these steps:
 
-1. **Download the Sample Integration**
-    - Start by downloading or cloning the `Sample Email Server Integration` as a base template.
-2. **Implement Required Methods**
-    - Fill in the necessary methods and configurations specific to the email server you are integrating with.
-3. **Customize the Integration**
-    - Modify the integration according to your requirements, including changing the class name, namespace, and any specific
-      logic.
-    - Add required configuration fields for connection to the email Server API.
-4. **Copy the Integration**
-    - Copy it to the `app/Lib/Integrations/EmailServers` directory according to the namespace used in your integration.
+1. **Download the Sample Integration**  
+    Start by downloading or cloning the `Sample Email Server Integration` as a base template.
+2. **Apply Required Changes**  
+    Every reference of "SampleEmailServer" should be replaced with your integration name, e.g.
+    - rename file app/Lib/Integrations/EmailServers/**SampleEmailServer.php** to **MyEmailProvider.php**
+    - replace **class SampleEmailServer** with **class MyEmailProvider** in file
+      * app/Lib/Integrations/EmailServers/MyEmailProvider.php
+    - rename directory app/Lib/Integrations/EmailServers/**SampleEmailServer** to **MyEmailProvider**
+    - replace namespace App\Lib\Integrations\EmailServers\\**SampleEmailServer** with **MyEmailProvider** in following files:
+      * app/Lib/Integrations/EmailServers/MyEmailProvider/Domain.php
+      * app/Lib/Integrations/EmailServers/MyEmailProvider/Domain/Account.php
+      * app/Lib/Integrations/EmailServers/MyEmailProvider/Domain/Forwarder.php
+3. **Upload the Integration**  
+    Upload contents of `app` directory to `/opt/panelalpha/app/packages/api/app` directory on the server where PanelAlpha is installed
+4. **Activate the Integration**  
+    Run following command as root on the server where PanelAlpha is installed:
+      ```
+      docker compose -f /opt/panelalpha/app/docker-compose.yml exec api php artisan integrations:sync
+      ```
+5. **Replace example code with your own within all methods in all files**  
+    Refer to comments inside the files for details.
 
 ## License
 
