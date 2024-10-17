@@ -50,12 +50,6 @@ To create and install your own email server integration, follow these steps:
 4. **Copy the Integration**
     - Copy it to the `app/Lib/Integrations/EmailServers` directory according to the namespace used in your integration.
 
-## Adding Translations
-
-The Sample Integration includes a `translation.json` file located in the directory at `SampleEmailServer/lang/en`, which
-contains the English translations required for the integration. If you need to add another language, you should create a
-new directory named after the language (e.g., `de` for German) and add a new file with the corresponding translations.
-
 ## License
 
 This repository is licensed under
