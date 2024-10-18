@@ -17,17 +17,20 @@ class Account extends AbstractAccount implements AccountInterface
      * Creates a new email account for the given domain.
      *
      * Parameters:
-     * - email (string)   : The email address to be created
-     * - password (string): The password for the email account
-     * - quota (int)      : The storage quota for the email account in MB
+     * - email (string)         : The email address to be created
+     * - password (string)      : The password for the email account
+     * - quota (int)            : The storage quota for the email account in MB
+     * - unlimited_quota (bool) : Value if storage quota must be unlimited
      *
-     * @param array $params Array containing 'email', 'password', and 'quota'
+     * @param array $params Array containing 'email', 'password', 'unlimited_quota' and 'quota'
      * @return void
      */
     public function create(array $params): void
     {
+        $domainName = $this->emailDomain()->domain;
+
         // Example API call to create a new email account
-        $this->emailServer()->sampleAPI()->createEmailAccount($this->emailDomain->domain, $params);
+        $this->emailServer()->sampleAPI()->createEmailAccount($domainName, $params);
     }
 
     /**
@@ -38,17 +41,20 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function delete(string $email): void
     {
+        $domainName = $this->emailDomain()->domain;
+
         // Example API call to delete an email account
-        $this->emailServer()->sampleAPI()->deleteEmailAccount($this->emailDomain->domain, $email);
+        $this->emailServer()->sampleAPI()->deleteEmailAccount($domainName, $email);
     }
 
     /**
      * Updates an existing email account for the given domain.
      *
      * Parameters:
-     * - email (string)   : The email address to be updated
-     * - password (string): The new password for the email account
-     * - quota (int)      : The new storage quota for the email account in MB
+     * - email (string)         : The email address to be updated
+     * - password (string)      : The new password for the email account
+     * - quota (int)            : The new storage quota for the email account in MB
+     * - unlimited_quota (bool) : Value if storage quota must be unlimited
      *
      * @param string $email The email address to be updated
      * @param array $params Array containing updated account details ('password', 'quota', etc.)
@@ -56,8 +62,10 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function update(string $email, array $params): void
     {
+        $domainName = $this->emailDomain()->domain;
+
         // Example API call to update an email account
-        $this->emailServer()->sampleAPI()->updateEmalAccount($this->emailDomain->domain, $email, $params);
+        $this->emailServer()->sampleAPI()->updateEmalAccount($domainName, $email, $params);
     }
 
     /**
@@ -68,10 +76,11 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function getConfiguration(string $email): array
     {
-        // Example API call to retrieve email account configuration
-        $result = $this->emailServer()->sampleAPI()->getEmailAccount($this->emailDomain->domain, $email);
+        $domainName = $this->emailDomain()->domain;
 
-        // Return the formatted configuration data
+        // Example API call to retrieve email account configuration
+        $result = $this->emailServer()->sampleAPI()->getEmailAccount($domainName, $email);
+
         return [
             "account" => 'test@example.com',
             "display" => 'test@example.com',
@@ -81,7 +90,7 @@ class Account extends AbstractAccount implements AccountInterface
             "pop3_insecure_port" => 110,
             "imap_port" => 993,
             "imap_insecure_port" => 443,
-            "inbox_username" =>  'test@example.com',
+            "inbox_username" => 'test@example.com',
             "mail_domain" => 'example.com',
             "smtp_host" => 'example.com',
             "smtp_insecure_port" => 25,
@@ -98,7 +107,10 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function webmailSsoUrl(string $email): string
     {
-        $result = $this->emailServer()->sampleAPI()->webmailSso($this->emailDomain->domain, $email);
+        $domainName = $this->emailDomain()->domain;
+
+        // Example API call to sso url to webmail
+        $result = $this->emailServer()->sampleAPI()->webmailSso($domainName, $email);
 
         return "https://example.com/";
     }

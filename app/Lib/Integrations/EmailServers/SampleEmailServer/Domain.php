@@ -29,13 +29,14 @@ class Domain extends AbstractDomain implements DomainInterface
     {
         $domainName = $this->model()->domain;
 
+        // Example API call to get list of email accounts for the domain
         $result = $this->emailServer()->sampleAPI()->listAccounts($domainName);
 
         return [
             [
                 'email' => 'test@example.com',
                 'disk_usage' => 12,
-                'disk_quota' => null,
+                'disk_quota' => 512,
             ],
             [
                 'email' => 'john@example.com',
@@ -43,8 +44,6 @@ class Domain extends AbstractDomain implements DomainInterface
                 'disk_quota' => 1000,
             ],
         ];
-
-        return $accounts;
     }
 
     /**
@@ -56,19 +55,21 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function listForwarders(): array
     {
-        $forwarders = [];
+        $domainName = $this->model()->domain;
 
         // Example API call to get list of email forwarders for the domain
-        $result = $this->emailServer()->sampleAPI()->listForwarders($this->emailDomain->domain);
+        $result = $this->emailServer()->sampleAPI()->listForwarders($domainName);
 
-        foreach ($result['forwarders'] as $forwarder) {
-            $forwarders[] = [
-                'email' => $forwarder['email'],
-                'forward_to' => $forwarder['forward_to'],
-            ];
-        }
-
-        return $forwarders;
+        return [
+            [
+                'email' => 'test@example.com',
+                'forward_to' => 'john@example.net',
+            ],
+            [
+                'email' => 'john@example.com',
+                'forward_to' => 'test@example.net',
+            ]
+        ];
     }
 
     /**
@@ -78,9 +79,12 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function exists(): bool
     {
+        $domainName = $this->model()->domain;
+
         // Example API call to check if the domain exists
-        $result = $this->emailServer()->sampleAPI()->emailDomainExists($this->emailDomain->domain);
-        return $result['exists'];
+        $result = $this->emailServer()->sampleAPI()->emailDomainExists($domainName);
+
+        return false;
     }
 
     /**
@@ -92,10 +96,12 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function create(): void
     {
-        // Example API call to create a new domain
-        $result = $this->emailServer()->sampleAPI()->createEmailDomain($this->emailDomain->domain);
+        $domainName = $this->model()->domain;
 
-        // Update EmailDomain model with new details and save
+        // Example API call to create a new domain
+        $result = $this->emailServer()->sampleAPI()->createEmailDomain($domainName);
+
+        // Update model with new details and save
         $this->model()->setDetails([
             'remote_id' => 12,
         ]);
@@ -109,8 +115,10 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function delete(): void
     {
+        $domainName = $this->model()->domain;
+
         // Example API call to delete the domain
-        $this->emailServer()->sampleAPI()->deleteEmailDomain($this->emailDomain->domain);
+        $this->emailServer()->sampleAPI()->deleteEmailDomain($domainName);
     }
 
     /**
@@ -128,7 +136,6 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function usage(): array
     {
-
         $domain = $this->model();
         $domainDetails = $domain->getDetails();
 

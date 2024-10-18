@@ -46,7 +46,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * If the email server is configured in admin area, values of these fields can be accessed
      * by using `$this->getConnectionConfig()` from within this class
-     * 
+     *
      * @var array<array> $configFields
      */
     public static array $configFields = [
@@ -78,7 +78,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * If the plan is configured in admin area, values of these fields can be accessed
      * by using `$this->getPlanConfig()` from Domain/Account/Forwarder classes within this namespace.
-     * 
+     *
      * @var array<array> $configFields
      */
     public static array $accountConfigFields = [
@@ -96,7 +96,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      *
      * @param array $config The API connection configuration based on $configFields.
      * @return void
-     * @throws Exception If the connection test fails.
+     * @throws \Exception If the connection test fails.
      */
     public static function testConnection(array $config): void
     {
@@ -105,7 +105,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         $result = self::sampleAPI()->testConnection([
             'api_url' => $config['api_url'],
             'api_key' => $config['api_key'],
-            'ssl_verification' => $config['ssl_verification'],
+            'ssl_verification' => $config['ssl_verification'] ?? false,
         ]);
         if ($result['error']) {
             throw new \Exception($result['error']);
@@ -115,7 +115,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     /**
      * Retrieves a list of all email domains from the email server.
      * Used in email server synchronization.
-     * 
+     *
      * Returned value is expected to be an array of arrays containing:
      * - 'domain' (string) The domain name
      * - 'details' (array) Additional details about the domain
@@ -132,7 +132,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         $this->sampleAPI()->authorize([
             'api_url' => $config['api_url'],
             'api_key' => $config['api_key'],
-            'ssl_verification' => $config['ssl_verification'],
+            'ssl_verification' => $config['ssl_verification'] ?? null,
         ]);
 
         // Example API call to retrieve a list of email domains.
@@ -156,7 +156,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * Used in email server synchronization.
      *
      * Returns the domains array, or null if not found.
-     * 
+     *
      * @param string $domain The email domain name.
      * @return ?array{
      *     domain: string,
@@ -166,7 +166,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     public function findDomain(string $domain): ?array
     {
         // Example API call to retrieve a single domain by its name.
-        $result = self::sampleAPI()->findDomain($domain);
+        $result = $this->sampleAPI()->findDomain($domain);
 
         if (!$result) {
             return null;
@@ -179,7 +179,6 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
             ],
         ];
     }
-
 
 
     /**
@@ -219,12 +218,13 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      */
     public static function sampleAPI(): object
     {
-        return (new class {
+        return (new class () {
             public function __call(string $name, array $arguments)
             {
                 return true;
             }
-            public function testConnection()
+
+            public function testConnection($config)
             {
                 sleep(1);
                 return [
@@ -232,6 +232,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
                     "error" => rand(0, 1) == 1 ? "Sometimes I work, sometimes I don't" : null,
                 ];
             }
+
             public function getDomains()
             {
                 return [
@@ -239,6 +240,18 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
                     ['id' => 3, 'name' => 'example.org'],
                 ];
             }
+
+            public function findDomain(string $domain)
+            {
+                return [
+                    'id' => 1,
+                    'name' => 'example.com',
+                    'details' => [
+                        'remote_id' => '123'
+                    ]
+                ];
+            }
+
             public function getPlans()
             {
                 return [
