@@ -3,7 +3,6 @@
 namespace App\Lib\Integrations\EmailServers\SampleEmailServer\Domain;
 
 use App\Lib\Integrations\EmailServers\AbstractEmailServer\Domain\AbstractForwarder;
-use App\Lib\Integrations\EmailServers\SampleEmailServer;
 use App\Lib\Interfaces\Integrations\EmailServer\Domain\ForwarderInterface;
 use Exception;
 
@@ -34,7 +33,7 @@ class Forwarder extends AbstractForwarder implements ForwarderInterface
     public function create(array $params): void
     {
         // Example API call to create a new forwarder
-        SampleEmailServer::sampleAPI()->createForwarder($this->emailDomain->domain, $params);
+        $this->emailServer()->sampleAPI()->createForwarder($this->emailDomain->domain, $params);
     }
 
     /**
@@ -52,6 +51,6 @@ class Forwarder extends AbstractForwarder implements ForwarderInterface
     public function delete(string $email, string $forward_to): void
     {
         // Example API call to delete an existing forwarder
-        SampleEmailServer::sampleAPI()->createForwarder($this->emailDomain->domain, $email, $forward_to);
+        $this->emailServer()->sampleAPI()->createForwarder($this->emailDomain->domain, $email, $forward_to);
     }
 }

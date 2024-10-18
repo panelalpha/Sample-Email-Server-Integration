@@ -4,7 +4,6 @@ namespace App\Lib\Integrations\EmailServers;
 
 use App\Lib\Integrations\EmailServers\AbstractEmailServer;
 use App\Lib\Interfaces\Integrations\ExternalEmailServerInterface;
-use Exception;
 
 /**
  * Class SampleEmailServer
@@ -29,13 +28,12 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     /**
      * The URL to the email server's official website.
      *
-     * This link provides direct access to additional information,
-     * support, or configuration settings provided by the email server.
+     * This link shows up in email server list in admin area.
+     * For informational purposes only.
      *
      * Optional.
      */
     public static ?string $link = "https://example.com";
-
 
     /**
      * Configuration fields needed to connect to the email server API.
@@ -47,7 +45,9 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * Form with these fields will be rendered in admin area when adding/editing email server.
      *
      * If the email server is configured in admin area, values of these fields can be accessed
-     * by using `$this->model->connection_config` from within this class
+     * by using `$this->getConnectionConfig()` from within this class
+     * 
+     * @var array<array> $configFields
      */
     public static array $configFields = [
         'api_url' => [
@@ -77,16 +77,16 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * Form with these fields will be rendered in admin area when adding/editing plan.
      *
      * If the plan is configured in admin area, values of these fields can be accessed
-     * by using `$this->service->plan->email_account_config` from within this class.
-     * Note: `$this->service` is nullable and should be accessed
-     * only from `usage` method in this class.
+     * by using `$this->getPlanConfig()` from Domain/Account/Forwarder classes within this namespace.
+     * 
+     * @var array<array> $configFields
      */
     public static array $accountConfigFields = [
-        'example_config' => [
-            'name' => 'example_config',
-            'label' => 'Example config',
+        'email_plan' => [
+            'name' => 'email_plan',
+            'label' => 'Email Plan',
             'type' => 'text',
-            'default' => 'Default',
+            'default' => 'unlimited',
         ],
     ];
 
@@ -107,28 +107,39 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
             'api_key' => $config['api_key'],
             'ssl_verification' => $config['ssl_verification'],
         ]);
-        if (!$result) {
-            throw new \Exception('Test connection failed');
+        if ($result['error']) {
+            throw new \Exception($result['error']);
         }
     }
 
     /**
      * Retrieves a list of all email domains from the email server.
-     *
-     * Each domain in the list includes:
+     * Used in email server synchronization.
+     * 
+     * Returned value is expected to be an array of arrays containing:
      * - 'domain' (string) The domain name
      * - 'details' (array) Additional details about the domain
      *
-     * @return array[] List of email domains.
+     * @return array<array{
+     *   domain: string,
+     *   details?: array<string,mixed>
+     * }>
      */
     public function listDomains(): array
     {
-        $domains = [];
+        $config = $this->getConnectionConfig();
+
+        $this->sampleAPI()->authorize([
+            'api_url' => $config['api_url'],
+            'api_key' => $config['api_key'],
+            'ssl_verification' => $config['ssl_verification'],
+        ]);
 
         // Example API call to retrieve a list of email domains.
-        $result = self::sampleAPI()->listDomains();
+        $result = $this->sampleAPI()->getDomains();
 
-        foreach ($result['domains'] as $domain) {
+        $domains = [];
+        foreach ($result as $domain) {
             $domains[] = [
                 'domain' => $domain['name'],
                 'details' => [
@@ -142,12 +153,15 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
 
     /**
      * Retrieves details for a specific email domain by its name.
+     * Used in email server synchronization.
      *
+     * Returns the domains array, or null if not found.
+     * 
      * @param string $domain The email domain name.
      * @return ?array{
      *     domain: string,
      *     details: array,
-     * } The domain details, or null if not found.
+     * }
      */
     public function findDomain(string $domain): ?array
     {
@@ -166,46 +180,7 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         ];
     }
 
-    /**
-     * Retrieves usage statistics for email accounts and forwarders on the server.
-     *
-     * The response includes:
-     * - 'email_accounts' (array) The usage and maximum limits for email accounts.
-     * - 'forwarders' (array) The usage and maximum limits for forwarders.
-     *
-     *  Possible values:
-     *  - usage - only integer
-     *  - maximum - integer or null for no limit
-     *
-     * @return array The usage details for email accounts and forwarders.
-     */
-    public function usage(): array
-    {
-        /**
-         * To get list of email domain under service you can use
-         * $this->service->emailDomains->pluck('domain');
-         * which will create an array of domain names, e.g.
-         *   $domains = [
-         *     'example.com,
-         *     'example.org,
-         *   ]
-         */
-        $domains = $this->service->emailDomains->pluck('domain');
 
-        // Example API call to get usage statistics for email accounts and forwarders.
-        $result = self::sampleAPI()->getUsage($domains);
-
-        return [
-            'email_accounts' => [
-                'usage' => $result['email_accounts']['usage'],
-                'maximum' => $result['email_accounts']['maximum'] ?? null,
-            ],
-            'forwarders' => [
-                'usage' => $result['forwarders']['usage'],
-                'maximum' => $result['forwarders']['maximum'] ?? null,
-            ],
-        ];
-    }
 
     /**
      * Retrieves available configuration values for account setup.
@@ -214,32 +189,33 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
      * $accountConfigFields. This is useful for fields with multiple possible values.
      *
      * Example:
-     * For the 'example_config' field, this method retrieves all possible configurations.
+     * For the 'email_plan' field, this method retrieves all possible configurations.
+     * This will replace text input with dropdown when adding/editing plan in admin area.
      *
      * The method returns an array with 'text' and 'value' keys for each available option.
      *
-     * @return array List of available configuration values for the email server.
      */
     public function getAvailableServerValues(): array
     {
         // Example API call to retrieve available configuration values for the server.
-        $result = self::sampleAPI()->getConfig();
+        $result = $this->sampleAPI()->getPlans();
 
-        $exampleConfig = [];
-        foreach ($result['example_config'] as $item) {
-            $exampleConfig[] = [
-                'text' => $item['name'],
-                'value' => $item['id'],
+        $plans = [];
+        foreach ($result as $plan) {
+            $plans[] = [
+                'text' => $plan['name'],
+                'value' => $plan['id'],
             ];
         }
 
         return [
-            'example_config' => $exampleConfig,
+            'email_plan' => $plans,
         ];
     }
 
     /**
-     * For demonstration purposes only
+     * This method simulates API responses from email server.
+     * Used for demonstration purposes only.
      */
     public static function sampleAPI(): object
     {
@@ -247,6 +223,29 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
             public function __call(string $name, array $arguments)
             {
                 return true;
+            }
+            public function testConnection()
+            {
+                sleep(1);
+                return [
+                    "data" => "OK",
+                    "error" => rand(0, 1) == 1 ? "Sometimes I work, sometimes I don't" : null,
+                ];
+            }
+            public function getDomains()
+            {
+                return [
+                    ['id' => 1, 'name' => 'example.com'],
+                    ['id' => 3, 'name' => 'example.org'],
+                ];
+            }
+            public function getPlans()
+            {
+                return [
+                    ['id' => 'starter', 'name' => 'Starter'],
+                    ['id' => 'premium', 'name' => 'Premium'],
+                    ['id' => 'unlimited', 'name' => 'Unlimited'],
+                ];
             }
         });
     }

@@ -3,7 +3,6 @@
 namespace App\Lib\Integrations\EmailServers\SampleEmailServer\Domain;
 
 use App\Lib\Integrations\EmailServers\AbstractEmailServer\Domain\AbstractAccount;
-use App\Lib\Integrations\EmailServers\SampleEmailServer;
 use App\Lib\Interfaces\Integrations\EmailServer\Domain\AccountInterface;
 
 /**
@@ -28,7 +27,7 @@ class Account extends AbstractAccount implements AccountInterface
     public function create(array $params): void
     {
         // Example API call to create a new email account
-        SampleEmailServer::sampleAPI()->createEmailAccount($this->emailDomain->domain, $params);
+        $this->emailServer()->sampleAPI()->createEmailAccount($this->emailDomain->domain, $params);
     }
 
     /**
@@ -40,7 +39,7 @@ class Account extends AbstractAccount implements AccountInterface
     public function delete(string $email): void
     {
         // Example API call to delete an email account
-        SampleEmailServer::sampleAPI()->deleteEmailAccount($this->emailDomain->domain, $email);
+        $this->emailServer()->sampleAPI()->deleteEmailAccount($this->emailDomain->domain, $email);
     }
 
     /**
@@ -58,7 +57,7 @@ class Account extends AbstractAccount implements AccountInterface
     public function update(string $email, array $params): void
     {
         // Example API call to update an email account
-        SampleEmailServer::sampleAPI()->updateEmalAccount($this->emailDomain->domain, $email, $params);
+        $this->emailServer()->sampleAPI()->updateEmalAccount($this->emailDomain->domain, $email, $params);
     }
 
     /**
@@ -70,24 +69,24 @@ class Account extends AbstractAccount implements AccountInterface
     public function getConfiguration(string $email): array
     {
         // Example API call to retrieve email account configuration
-        $result = SampleEmailServer::sampleAPI()->getEmailAccount($this->emailDomain->domain, $email);
+        $result = $this->emailServer()->sampleAPI()->getEmailAccount($this->emailDomain->domain, $email);
 
         // Return the formatted configuration data
         return [
-            "account" => $result['account'] ?? 'test@example.com',
-            "display" => $result['display'] ?? 'test@example.com',
-            "domain" => $result['domain'] ?? 'example.com',
-            "inbox_host" => $result['inbox_host'] ?? 'example.com',
-            "pop3_port" => $result['pop3_port'] ?? 995,
-            "pop3_insecure_port" => $result['pop3_insecure_port'] ?? 110,
-            "imap_port" => $result['imap_port'] ?? 993,
-            "imap_insecure_port" => $result['imap_insecure_port'] ?? 143,
-            "inbox_username" => $result['inbox_username'] ?? 'test@example.com',
-            "mail_domain" => $result['mail_domain'] ?? 'example.com',
-            "smtp_host" => $result['smtp_host'] ?? 'example.com',
-            "smtp_insecure_port" => $result['smtp_insecure_port'] ?? 25,
-            "smtp_port" => $result['smtp_port'] ?? 465,
-            "smtp_username" => $result['smtp_username'] ?? 'test@example.com',
+            "account" => 'test@example.com',
+            "display" => 'test@example.com',
+            "domain" => 'example.com',
+            "inbox_host" => 'example.com',
+            "pop3_port" => 995,
+            "pop3_insecure_port" => 110,
+            "imap_port" => 993,
+            "imap_insecure_port" => 443,
+            "inbox_username" =>  'test@example.com',
+            "mail_domain" => 'example.com',
+            "smtp_host" => 'example.com',
+            "smtp_insecure_port" => 25,
+            "smtp_port" => 465,
+            "smtp_username" => 'test@example.com',
         ];
     }
 
@@ -95,17 +94,12 @@ class Account extends AbstractAccount implements AccountInterface
      * Retrieves a Single Sign-On (SSO) URL for accessing webmail for a given email account.
      *
      * @param string $email The email address for which the SSO URL is retrieved
-     * @return object{
-     *     url: string  // The SSO URL to access the webmail interface
-     * }
+     * @return string  // The SSO URL to access the webmail interface
      */
-    public function webmailSso(string $email): \stdClass
+    public function webmailSsoUrl(string $email): string
     {
-        // Example API call to get webmail SSO URL
-        $result = SampleEmailServer::sampleAPI()->webmailSso($this->emailDomain->domain, $email);
+        $result = $this->emailServer()->sampleAPI()->webmailSso($this->emailDomain->domain, $email);
 
-        $obj = new \stdClass();
-        $obj->url = $result['url'];
-        return $obj;
+        return "https://example.com/";
     }
 }

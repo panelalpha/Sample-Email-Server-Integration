@@ -2,25 +2,14 @@
 
 namespace App\Lib\Integrations\EmailServers\SampleEmailServer;
 
-use App\Lib\Integrations\EmailServers\SampleEmailServer;
 use App\Lib\Integrations\EmailServers\AbstractEmailServer\AbstractDomain;
 use App\Lib\Interfaces\Integrations\EmailServer\DomainInterface;
-use App\Models\EmailDomain;
-use Exception;
 
 /**
  * Class Domain
  *
  * Provides functionality for managing domains on an email server.
  *
- * @property EmailDomain{
- *     id: int,
- *     user_id: int,
- *     service_id: int,
- *     server_account_id: int,
- *     domain: string,
- *     details: array
- * } $emailDomain
  */
 class Domain extends AbstractDomain implements DomainInterface
 {
@@ -38,18 +27,22 @@ class Domain extends AbstractDomain implements DomainInterface
      */
     public function listAccounts(): array
     {
-        $accounts = [];
+        $domainName = $this->model()->domain;
 
-        // Example API call to get list of email accounts for the domain
-        $result = SampleEmailServer::sampleAPI()->listAccounts($this->emailDomain->domain);
+        $result = $this->emailServer()->sampleAPI()->listAccounts($domainName);
 
-        foreach ($result['accounts'] as $account) {
-            $accounts[] = [
-                'email' => $account['email'],
-                'disk_usage' => $account['disk_usage'],
-                'disk_quota' => $account['disk_quota'] ?? null,
-            ];
-        }
+        return [
+            [
+                'email' => 'test@example.com',
+                'disk_usage' => 12,
+                'disk_quota' => null,
+            ],
+            [
+                'email' => 'john@example.com',
+                'disk_usage' => 43,
+                'disk_quota' => 1000,
+            ],
+        ];
 
         return $accounts;
     }
@@ -66,7 +59,7 @@ class Domain extends AbstractDomain implements DomainInterface
         $forwarders = [];
 
         // Example API call to get list of email forwarders for the domain
-        $result = SampleEmailServer::sampleAPI()->listForwarders($this->emailDomain->domain);
+        $result = $this->emailServer()->sampleAPI()->listForwarders($this->emailDomain->domain);
 
         foreach ($result['forwarders'] as $forwarder) {
             $forwarders[] = [
@@ -86,7 +79,7 @@ class Domain extends AbstractDomain implements DomainInterface
     public function exists(): bool
     {
         // Example API call to check if the domain exists
-        $result = SampleEmailServer::sampleAPI()->emailDomainExists($this->emailDomain->domain);
+        $result = $this->emailServer()->sampleAPI()->emailDomainExists($this->emailDomain->domain);
         return $result['exists'];
     }
 
@@ -95,29 +88,65 @@ class Domain extends AbstractDomain implements DomainInterface
      *
      * Updates the EmailDomain model with the new details after successful creation.
      *
-     * @throws Exception If the domain creation fails
+     * @throws \Exception If the domain creation fails
      */
     public function create(): void
     {
         // Example API call to create a new domain
-        $result = SampleEmailServer::sampleAPI()->createEmailDomain($this->emailDomain->domain);
+        $result = $this->emailServer()->sampleAPI()->createEmailDomain($this->emailDomain->domain);
 
         // Update EmailDomain model with new details and save
-        $this->emailDomain->setDetails([
-            'detail' => $result['details']['detail'],
+        $this->model()->setDetails([
+            'remote_id' => 12,
         ]);
-        $this->emailDomain->save();
-
+        $this->model()->save();
     }
 
     /**
      * Deletes the domain from the email server.
      *
-     * @throws Exception If the domain deletion fails
+     * @throws \Exception If the domain deletion fails
      */
     public function delete(): void
     {
         // Example API call to delete the domain
-        SampleEmailServer::sampleAPI()->deleteEmailDomain($this->emailDomain->domain);
+        $this->emailServer()->sampleAPI()->deleteEmailDomain($this->emailDomain->domain);
+    }
+
+    /**
+     * Retrieves usage statistics for email accounts and forwarders on the server.
+     *
+     * The response includes:
+     * - 'email_accounts' (array) The usage and maximum limits for email accounts.
+     * - 'forwarders' (array) The usage and maximum limits for forwarders.
+     *
+     *  Possible values:
+     *  - usage - only integer
+     *  - maximum - integer or null for no limit
+     *
+     * @return array The usage details for email accounts and forwarders.
+     */
+    public function usage(): array
+    {
+
+        $domain = $this->model();
+        $domainDetails = $domain->getDetails();
+
+        $domainName = $domain->domain;
+        $domainId = $domainDetails['remote_id'];
+
+        $result = $this->emailServer()->sampleAPI()->getDomainByName($domainName);
+        $result = $this->emailServer()->sampleAPI()->getDomainById($domainId);
+
+        return [
+            'email_accounts' => [
+                'usage' => 4,
+                'maximum' => 100,
+            ],
+            'forwarders' => [
+                'usage' => 3,
+                'maximum' => null,
+            ],
+        ];
     }
 }
