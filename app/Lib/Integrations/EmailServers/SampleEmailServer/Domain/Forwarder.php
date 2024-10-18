@@ -26,7 +26,7 @@ class Forwarder extends AbstractForwarder implements ForwarderInterface
      */
     public function create(array $params): void
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to create a new forwarder
         $this->emailServer()->sampleAPI()->createForwarder($domainName, $params);
@@ -45,7 +45,7 @@ class Forwarder extends AbstractForwarder implements ForwarderInterface
      */
     public function delete(string $email, string $forward_to): void
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to delete an existing forwarder
         $this->emailServer()->sampleAPI()->createForwarder($domainName, $email, $forward_to);

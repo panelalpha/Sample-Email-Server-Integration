@@ -27,7 +27,7 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function create(array $params): void
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to create a new email account
         $this->emailServer()->sampleAPI()->createEmailAccount($domainName, $params);
@@ -41,7 +41,7 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function delete(string $email): void
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to delete an email account
         $this->emailServer()->sampleAPI()->deleteEmailAccount($domainName, $email);
@@ -62,7 +62,7 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function update(string $email, array $params): void
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to update an email account
         $this->emailServer()->sampleAPI()->updateEmalAccount($domainName, $email, $params);
@@ -76,7 +76,7 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function getConfiguration(string $email): array
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to retrieve email account configuration
         $result = $this->emailServer()->sampleAPI()->getEmailAccount($domainName, $email);
@@ -107,7 +107,7 @@ class Account extends AbstractAccount implements AccountInterface
      */
     public function webmailSsoUrl(string $email): string
     {
-        $domainName = $this->emailDomain()->domain;
+        $domainName = $this->emailDomain()->model()->domain;
 
         // Example API call to sso url to webmail
         $result = $this->emailServer()->sampleAPI()->webmailSso($domainName, $email);
