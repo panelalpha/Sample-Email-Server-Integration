@@ -173,9 +173,9 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
         }
 
         return [
-            'domain' => $result['domain']['name'],
+            'domain' => $result['name'],
             'details' => [
-                'remote_id' => $result['domain']['id'],
+                'remote_id' => $result['details']['remote_id'],
             ],
         ];
     }
