@@ -156,4 +156,57 @@ class Domain extends AbstractDomain implements DomainInterface
             ],
         ];
     }
+
+    /**
+     * Retrieves DKIM DNS records for the domain.
+     *
+     * Makes an API call to fetch the DKIM record information for the domain
+     * and returns it in the standardized DNS record format.
+     *
+     * @return array<array{
+     *     name: string,
+     *     type: string,
+     *     value: string
+     * }> Array of DKIM DNS records with name, type, and value
+     */
+    public function getDkimRecords(): array
+    {
+        $domain = $this->model();
+        $domainDetails = $domain->getDetails();
+
+        $domainName = $domain->domain;
+        $domainId = $domainDetails['remote_id'];
+
+        $result = $this->emailServer()->sampleAPI()->getDkimRecord($domainName);
+        return [
+            [
+                'name' => $result['name'],
+                'type' => 'TXT',
+                'value' => $result['value'],
+            ]
+        ];
+    }
+
+    /**
+     * Retrieves SPF DNS records for the domain.
+     *
+     * Generates the SPF record with the email server's IP address to authorize
+     * the server to send emails for this domain.
+     *
+     * @return array<array{
+     *     name: string,
+     *     type: string,
+     *     value: string
+     * }> Array of SPF DNS records with name, type, and value
+     */
+    public function getSpfRecords(): array
+    {
+        return [
+            [
+                'name' => $this->model()->domain,
+                'type' => 'TXT',
+                'value' => "v=spf1 mx a ip4:{$this->emailServer()->model->getIpAddress()} ~all"
+            ]
+        ];
+    }
 }

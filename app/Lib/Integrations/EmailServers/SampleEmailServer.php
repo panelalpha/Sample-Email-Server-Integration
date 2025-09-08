@@ -260,6 +260,22 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
                     ['id' => 'unlimited', 'name' => 'Unlimited'],
                 ];
             }
+
+            public function getDkimRecord(string $domain)
+            {
+                return [
+                    'name' => 'default._domainkey.example.com.',
+                    'value' => '=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9',
+                ];
+            }
+
+            public function getSpfRecord(string $domain)
+            {
+                return [
+                    'name' => 'example.com.',
+                    'value' => "v=spf1 mx a ip4:127.0.0.1 ~all",
+                ];
+            }
         });
     }
 }
