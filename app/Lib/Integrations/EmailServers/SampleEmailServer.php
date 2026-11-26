@@ -91,6 +91,37 @@ class SampleEmailServer extends AbstractEmailServer implements ExternalEmailServ
     ];
 
     /**
+     * Corrects (normalizes) the connection configuration entered in admin area.
+     *
+     * Required by ExternalEmailServerInterface. PanelAlpha calls this method before
+     * testing the connection and before saving the email server configuration,
+     * so the corrected values are the ones passed to testConnection() and later
+     * returned by `$this->getConnectionConfig()`.
+     *
+     * Use it to fix common input mistakes, e.g. a missing URL scheme, default port
+     * or trailing slash. If no correction is needed, simply `return $config;`.
+     *
+     * @param array $config The API connection configuration based on $configFields.
+     * @return array The corrected connection configuration.
+     */
+    public static function correctConnectionConfig(array $config): array
+    {
+        // Example: "mail.example.com/" becomes "https://mail.example.com".
+        $apiUrl = trim((string)($config['api_url'] ?? ''));
+        if ($apiUrl === '') {
+            return $config;
+        }
+
+        if (!preg_match('#^https?://#i', $apiUrl)) {
+            $apiUrl = 'https://' . $apiUrl;
+        }
+
+        $config['api_url'] = rtrim($apiUrl, '/');
+
+        return $config;
+    }
+
+    /**
      * Tests the connection to the email server API using the provided configuration.
      * This method doesn't expect return on success and should throw exception on failure.
      *
